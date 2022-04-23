@@ -6,14 +6,14 @@ import shutil
 from typing import List
 from pathlib import Path
 
-from cdv import __version__
+from chdv import __version__
 
-from chia.util.hash import std_hash
-from chia.util.bech32m import encode_puzzle_hash, decode_puzzle_hash
+from chinilla.util.hash import std_hash
+from chinilla.util.bech32m import encode_puzzle_hash, decode_puzzle_hash
 
-from cdv.cmds import (
+from chdv.cmds import (
     clsp,
-    chia_inspect,
+    chinilla_inspect,
     rpc,
 )
 
@@ -37,7 +37,7 @@ def monkey_patch_click() -> None:
 
 
 @click.group(
-    help="\n  Dev tooling for Chia development \n",
+    help="\n  Dev tooling for Chinilla development \n",
     context_settings=CONTEXT_SETTINGS,
 )
 @click.version_option(__version__)
@@ -67,10 +67,10 @@ def test_cmd(tests: str, discover: bool, init: str):
         if not test_dir.exists():
             os.mkdir("tests")
 
-        import cdv.test as testlib
+        import chdv.test as testlib
 
         # It finds these files relative to its position in the venv
-        # If the cdv/test/__init__.py file or any of the relvant files move, this will break
+        # If the chdv/test/__init__.py file or any of the relvant files move, this will break
         src_path = Path(testlib.__file__).parent.joinpath("test_skeleton.py")
         dest_path: Path = test_dir.joinpath("test_skeleton.py")
         shutil.copyfile(src_path, dest_path)
@@ -97,7 +97,7 @@ def hash_cmd(data: str):
 @click.option(
     "-p",
     "--prefix",
-    default="xch",
+    default="hcx",
     show_default=True,
     required=False,
     help="The prefix to encode with",
@@ -113,7 +113,7 @@ def decode_cmd(address: str):
 
 
 cli.add_command(clsp.clsp_cmd)
-cli.add_command(chia_inspect.inspect_cmd)
+cli.add_command(chinilla_inspect.inspect_cmd)
 cli.add_command(rpc.rpc_cmd)
 
 

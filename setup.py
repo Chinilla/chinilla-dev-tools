@@ -6,7 +6,7 @@ with open("README.md", "rt") as fh:
     long_description = fh.read()
 
 dependencies = [
-    "chia-blockchain==1.3.0",
+    "chinilla-blockchain@git+https://github.com/Chinilla/chinilla-blockchain.git@latest",
     "packaging==21.0",
     "pytest",
     "pytest-asyncio",
@@ -20,22 +20,22 @@ dev_dependencies = [
 ]
 
 setup(
-    name="chia_dev_tools",
+    name="chinilla_dev_tools",
     version="1.0.8",
     packages=find_packages(exclude=("tests",)),
     author="Quexington",
     entry_points={
-        "console_scripts": ["cdv = cdv.cmds.cli:main"],
+        "console_scripts": ["chdv = chdv.cmds.cli:main"],
     },
     package_data={
         "": ["*.clvm", "*.clvm.hex", "*.clib", "*.clsp", "*.clsp.hex"],
     },
-    author_email="m.hauff@chia.net",
+    author_email="m.hauff@chinilla.net",
     setup_requires=["setuptools_scm"],
     install_requires=dependencies,
-    url="https://github.com/Chia-Network",
+    url="https://github.com/Chinilla",
     license="https://opensource.org/licenses/Apache-2.0",
-    description="Chia development commands",
+    description="Chinilla development commands",
     long_description=long_description,
     long_description_content_type="text/markdown",
     classifiers=[
@@ -49,7 +49,7 @@ setup(
         dev=dev_dependencies,
     ),
     project_urls={
-        "Bug Reports": "https://github.com/Chia-Network/chia-dev-tools",
-        "Source": "https://github.com/Chia-Network/chia-dev-tools",
+        "Bug Reports": "https://github.com/Chinilla/chinilla-dev-tools",
+        "Source": "https://github.com/Chinilla/chinilla-dev-tools",
     },
 )

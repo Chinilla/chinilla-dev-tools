@@ -2,19 +2,19 @@ import pytest
 
 from typing import Dict, List, Optional
 
-from chia.types.blockchain_format.coin import Coin
-from chia.types.spend_bundle import SpendBundle
-from chia.types.condition_opcodes import ConditionOpcode
-from chia.util.ints import uint64
+from chinilla.types.blockchain_format.coin import Coin
+from chinilla.types.spend_bundle import SpendBundle
+from chinilla.types.condition_opcodes import ConditionOpcode
+from chinilla.util.ints import uint64
 
-from cdv.examples.drivers.piggybank_drivers import (
+from chdv.examples.drivers.piggybank_drivers import (
     create_piggybank_puzzle,
     solution_for_piggybank,
     piggybank_announcement_assertion,
 )
 
-from cdv.test import CoinWrapper
-from cdv.test import setup as setup_test
+from chdv.test import CoinWrapper
+from chdv.test import setup as setup_test
 
 
 class TestStandardTransaction:
@@ -28,11 +28,11 @@ class TestStandardTransaction:
         # Get our alice wallet some money
         await network.farm_block(farmer=alice)
 
-        # This will use one mojo to create our piggybank on the blockchain.
+        # This will use one vojo to create our piggybank on the blockchain.
         piggybank_coin: Optional[CoinWrapper] = await alice.launch_smart_coin(
             create_piggybank_puzzle(uint64(1000000000000), bob.puzzle_hash)
         )
-        # This retrieves us a coin that is at least 500 mojos.
+        # This retrieves us a coin that is at least 500 vojos.
         contribution_coin: Optional[CoinWrapper] = await alice.choose_coin(CONTRIBUTION_AMOUNT)
 
         # Make sure everything succeeded

@@ -2,17 +2,17 @@ from pathlib import Path
 
 from click.testing import CliRunner, Result
 
-from cdv.cmds.cli import cli
+from chdv.cmds.cli import cli
 
 
-class TestCdvCommands:
+class TestChdvCommands:
     def test_encode_decode(self):
         runner = CliRunner()
         puzhash: str = "3d4237d9383a7b6e60d1bfe551139ec2d6e5468205bf179ed381e66bed7b9788"
 
         # Without prefix
         result: Result = runner.invoke(cli, ["encode", puzhash])
-        address: str = "xch184pr0kfc8fakucx3hlj4zyu7cttw235zqkl308kns8nxhmtmj7yqxsnauc"
+        address: str = "hcx184pr0kfc8fakucx3hlj4zyu7cttw235zqkl308kns8nxhmtmj7yqxsnauc"
         assert result.exit_code == 0
         assert address in result.output
         result = runner.invoke(cli, ["decode", address])
@@ -20,8 +20,8 @@ class TestCdvCommands:
         assert puzhash in result.output
 
         # With prefix
-        result = runner.invoke(cli, ["encode", puzhash, "--prefix", "txch"])
-        test_address: str = "txch184pr0kfc8fakucx3hlj4zyu7cttw235zqkl308kns8nxhmtmj7yqth5tat"
+        result = runner.invoke(cli, ["encode", puzhash, "--prefix", "thcx"])
+        test_address: str = "thcx184pr0kfc8fakucx3hlj4zyu7cttw235zqkl308kns8nxhmtmj7yqth5tat"
         assert result.exit_code == 0
         assert test_address in result.output
         result = runner.invoke(cli, ["decode", test_address])
@@ -30,7 +30,7 @@ class TestCdvCommands:
 
     def test_hash(self):
         runner = CliRunner()
-        str_msg: str = "chia"
+        str_msg: str = "chinilla"
         b_msg: str = "0xcafef00d"
 
         result: Result = runner.invoke(cli, ["hash", str_msg])

@@ -5,17 +5,17 @@ import shutil
 from typing import Tuple, List
 from pathlib import Path
 
-from chia.types.blockchain_format.program import Program
-from chia.types.blockchain_format.sized_bytes import bytes32
-from chia.util.bech32m import encode_puzzle_hash, decode_puzzle_hash
+from chinilla.types.blockchain_format.program import Program
+from chinilla.types.blockchain_format.sized_bytes import bytes32
+from chinilla.util.bech32m import encode_puzzle_hash, decode_puzzle_hash
 
 from clvm_tools.binutils import disassemble, assemble
 
-from cdv.cmds.util import parse_program, append_include
-from cdv.util.load_clvm import compile_clvm
+from chdv.cmds.util import parse_program, append_include
+from chdv.util.load_clvm import compile_clvm
 
 
-@click.group("clsp", short_help="Commands to use when developing with chialisp")
+@click.group("clsp", short_help="Commands to use when developing with chinillalisp")
 def clsp_cmd():
     pass
 
@@ -157,8 +157,8 @@ def uncurry_cmd(program: str, treehash: bool, dump: bool):
     help="The tail hash of the CAT (hex or one of the standard CAT symbols, e.g. MRMT)",
 )
 def cat_puzzle_hash(inner_puzzlehash: str, tail_hash: str):
-    from chia.wallet.puzzles.cat_loader import CAT_MOD
-    from chia.wallet.cat_wallet.cat_constants import DEFAULT_CATS
+    from chinilla.wallet.puzzles.cat_loader import CAT_MOD
+    from chinilla.wallet.cat_wallet.cat_constants import DEFAULT_CATS
 
     default_cats_by_symbols = {cat["symbol"]: cat for cat in DEFAULT_CATS.values()}
     if tail_hash in default_cats_by_symbols:
@@ -194,7 +194,7 @@ def cat_puzzle_hash(inner_puzzlehash: str, tail_hash: str):
 )
 @click.argument("libraries", nargs=-1, required=True)
 def retrieve_cmd(libraries: Tuple[str]):
-    import cdv.clibs as clibs
+    import chdv.clibs as clibs
 
     for lib in libraries:
         if lib[-5:] == ".clib":  # We'll take it with or without the extension

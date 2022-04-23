@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Dict, List
 from click.testing import CliRunner, Result
 
-from cdv.cmds.cli import cli
+from chdv.cmds.cli import cli
 
 EMPTY_SIG = "c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"  # noqa
 
@@ -265,9 +265,9 @@ class TestInspectCommands:
         assert result.exit_code == 0
         assert modified_cost in result.output
 
-        # Try to use it the programmatic way (like cdv rpc pushtx does)
-        from cdv.cmds.chia_inspect import do_inspect_spend_bundle_cmd
-        from cdv.cmds.util import fake_context
+        # Try to use it the programmatic way (like chdv rpc pushtx does)
+        from chdv.cmds.chinilla_inspect import do_inspect_spend_bundle_cmd
+        from chdv.cmds.util import fake_context
 
         bundle_path = Path(__file__).parent.joinpath("object_files/spendbundles/spendbundle.json")
         assert len(do_inspect_spend_bundle_cmd(fake_context(), [str(bundle_path)], print_results=False)) > 0
@@ -350,8 +350,8 @@ class TestInspectCommands:
         assert id in result.output
 
     def test_keys(self):
-        mnemonic: str = "chia chia chia chia chia chia chia chia chia chia chia chia chia chia chia chia chia chia chia chia chia chia chia chia"  # noqa
-        passphrase: str = "chia"
+        mnemonic: str = "chinilla chinilla chinilla chinilla chinilla chinilla chinilla chinilla chinilla chinilla chinilla chinilla chinilla chinilla chinilla chinilla chinilla chinilla chinilla chinilla chinilla chinilla chinilla chinilla"  # noqa
+        passphrase: str = "chinilla"
         sk: str = "68cbc26a245903f3d20a405c0673a9f32b2382174abeeabadb7ba1478b162326"
         pk: str = "b7531990662d3fbff22d073a08123ddeae70e0a118cecebf8f207b373da5a90aaefcfed2d9cab8fbe711d6b4f5c72e89"
         hd_modifier: str = "m/12381/8444/0/0"

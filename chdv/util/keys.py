@@ -1,6 +1,6 @@
 from typing import List, Dict
 
-from chia.util.hash import std_hash
+from chinilla.util.hash import std_hash
 
 from blspy import BasicSchemeMPL, PrivateKey, G1Element, AugSchemeMPL, G2Element
 

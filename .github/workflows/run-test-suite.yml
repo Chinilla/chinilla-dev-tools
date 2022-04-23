@@ -42,5 +42,5 @@ jobs:
         python3 -m venv venv
         . ./venv/bin/activate
         pip install .
-        ./venv/bin/chia init
-        ./venv/bin/py.test tests/ cdv/examples/tests -s -v --durations 0
+        ./venv/bin/chinilla init
+        ./venv/bin/py.test tests/ chdv/examples/tests -s -v --durations 0

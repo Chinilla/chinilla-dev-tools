@@ -8,32 +8,32 @@ from secrets import token_bytes
 
 from blspy import AugSchemeMPL, PrivateKey, G1Element, G2Element
 
-from chia.types.blockchain_format.program import INFINITE_COST, Program
-from chia.types.blockchain_format.coin import Coin
-from chia.types.coin_spend import CoinSpend
-from chia.types.coin_record import CoinRecord
-from chia.types.spend_bundle import SpendBundle
-from chia.types.generator_types import BlockGenerator
-from chia.consensus.cost_calculator import NPCResult
-from chia.full_node.mempool_check_conditions import get_name_puzzle_conditions
-from chia.full_node.bundle_tools import simple_solution_generator
-from chia.wallet.derive_keys import _derive_path
-from chia.wallet.puzzles.p2_delegated_puzzle_or_hidden_puzzle import (
+from chinilla.types.blockchain_format.program import INFINITE_COST, Program
+from chinilla.types.blockchain_format.coin import Coin
+from chinilla.types.coin_spend import CoinSpend
+from chinilla.types.coin_record import CoinRecord
+from chinilla.types.spend_bundle import SpendBundle
+from chinilla.types.generator_types import BlockGenerator
+from chinilla.consensus.cost_calculator import NPCResult
+from chinilla.full_node.mempool_check_conditions import get_name_puzzle_conditions
+from chinilla.full_node.bundle_tools import simple_solution_generator
+from chinilla.wallet.derive_keys import _derive_path
+from chinilla.wallet.puzzles.p2_delegated_puzzle_or_hidden_puzzle import (
     DEFAULT_HIDDEN_PUZZLE_HASH,
     calculate_synthetic_secret_key,
     calculate_synthetic_public_key,
 )
-from chia.util.default_root import DEFAULT_ROOT_PATH
-from chia.util.config import load_config
-from chia.util.keychain import mnemonic_to_seed, bytes_to_mnemonic
-from chia.util.ints import uint64, uint32
-from chia.util.condition_tools import (
+from chinilla.util.default_root import DEFAULT_ROOT_PATH
+from chinilla.util.config import load_config
+from chinilla.util.keychain import mnemonic_to_seed, bytes_to_mnemonic
+from chinilla.util.ints import uint64, uint32
+from chinilla.util.condition_tools import (
     conditions_dict_for_solution,
     pkm_pairs_for_conditions_dict,
 )
-from chia.util.byte_types import hexstr_to_bytes
+from chinilla.util.byte_types import hexstr_to_bytes
 
-from cdv.cmds.util import parse_program
+from chdv.cmds.util import parse_program
 
 """
 This group of commands is for guessing the types of objects when you don't know what they are,
@@ -92,14 +92,14 @@ def json_and_key_strip(input: str) -> Dict:
         return json_dict
 
 
-# Utility function for maintaining compatibility with Chia 1.2.11
+# Utility function for maintaining compatibility with Chinilla 1.2.11
 def get_npc_result_cost(program: BlockGenerator, npc_result: NPCResult, cost_per_byte: int) -> int:
     try:
-        # Chia > 1.2.11
+        # Chinilla > 1.2.11
         return npc_result.cost
     except AttributeError:
-        # Chia 1.2.11
-        from chia.consensus.cost_calculator import calculate_cost_of_program
+        # Chinilla 1.2.11
+        from chinilla.consensus.cost_calculator import calculate_cost_of_program
 
         return calculate_cost_of_program(program.program, npc_result, cost_per_byte)
 
@@ -345,7 +345,7 @@ def do_inspect_coin_spend_cmd(
 @click.option(
     "-n",
     "--network",
-    default="mainnet",
+    default="vanillanet",
     show_default=True,
     help="The network this spend bundle will be pushed to (for AGG_SIG_ME)",
 )
@@ -596,7 +596,7 @@ def do_inspect_program_cmd(
     "-t",
     "--key-type",
     type=click.Choice(["farmer", "pool", "wallet", "local", "backup", "owner", "auth"]),
-    help="Automatically use a chia defined HD path for a specific service",
+    help="Automatically use a chinilla defined HD path for a specific service",
 )
 @click.option(
     "-sy",

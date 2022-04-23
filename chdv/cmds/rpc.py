@@ -6,22 +6,22 @@ import json
 from typing import Dict, Optional, List, Tuple
 from pprint import pprint
 
-from chia.consensus.block_record import BlockRecord
-from chia.rpc.full_node_rpc_client import FullNodeRpcClient
-from chia.util.default_root import DEFAULT_ROOT_PATH
-from chia.util.config import load_config
-from chia.util.ints import uint16, uint64
-from chia.util.misc import format_bytes
-from chia.util.byte_types import hexstr_to_bytes
-from chia.types.blockchain_format.coin import Coin
-from chia.types.blockchain_format.sized_bytes import bytes32
-from chia.types.coin_spend import CoinSpend
-from chia.types.coin_record import CoinRecord
-from chia.types.full_block import FullBlock
-from chia.types.unfinished_header_block import UnfinishedHeaderBlock
+from chinilla.consensus.block_record import BlockRecord
+from chinilla.rpc.full_node_rpc_client import FullNodeRpcClient
+from chinilla.util.default_root import DEFAULT_ROOT_PATH
+from chinilla.util.config import load_config
+from chinilla.util.ints import uint16, uint64
+from chinilla.util.misc import format_bytes
+from chinilla.util.byte_types import hexstr_to_bytes
+from chinilla.types.blockchain_format.coin import Coin
+from chinilla.types.blockchain_format.sized_bytes import bytes32
+from chinilla.types.coin_spend import CoinSpend
+from chinilla.types.coin_record import CoinRecord
+from chinilla.types.full_block import FullBlock
+from chinilla.types.unfinished_header_block import UnfinishedHeaderBlock
 
-from cdv.cmds.util import fake_context
-from cdv.cmds.chia_inspect import do_inspect_spend_bundle_cmd
+from chdv.cmds.util import fake_context
+from chdv.cmds.chinilla_inspect import do_inspect_spend_bundle_cmd
 
 
 """
@@ -30,12 +30,12 @@ Please be careful when making changes.
 """
 
 
-@click.group("rpc", short_help="Make RPC requests to a Chia full node")
+@click.group("rpc", short_help="Make RPC requests to a Chinilla full node")
 def rpc_cmd():
     pass
 
 
-# Loading the client requires the standard chia root directory configuration that all of the chia commands rely on
+# Loading the client requires the standard chinilla root directory configuration that all of the chinilla commands rely on
 async def get_client() -> Optional[FullNodeRpcClient]:
     try:
         config = load_config(DEFAULT_ROOT_PATH, "config.yaml")
@@ -244,7 +244,7 @@ def rpc_pushtx_cmd(spendbundles: Tuple[str]):
     async def do_command():
         try:
             node_client: FullNodeRpcClient = await get_client()
-            # It loads the spend bundle using cdv inspect
+            # It loads the spend bundle using chdv inspect
             for bundle in do_inspect_spend_bundle_cmd(fake_context(), spendbundles, print_results=False):
                 try:
                     result: Dict = await node_client.push_tx(bundle)

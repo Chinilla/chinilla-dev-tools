@@ -1,6 +1,6 @@
 import pytest
 
-from cdv.test import setup as setup_test
+from chdv.test import setup as setup_test
 
 
 class TestSomething:
