@@ -6,7 +6,7 @@ with open("README.md", "rt") as fh:
     long_description = fh.read()
 
 dependencies = [
-    "chinilla-blockchain@git+https://github.com/Chinilla/chinilla-blockchain.git@latest",
+    "chinilla-blockchain",
     "packaging==21.0",
     "pytest",
     "pytest-asyncio",
@@ -23,14 +23,14 @@ setup(
     name="chinilla_dev_tools",
     version="1.0.8",
     packages=find_packages(exclude=("tests",)),
-    author="Quexington",
+    author="Edward Teach",
     entry_points={
         "console_scripts": ["chdv = chdv.cmds.cli:main"],
     },
     package_data={
         "": ["*.clvm", "*.clvm.hex", "*.clib", "*.clsp", "*.clsp.hex"],
     },
-    author_email="m.hauff@chinilla.net",
+    author_email="edward@chinilla.net",
     setup_requires=["setuptools_scm"],
     install_requires=dependencies,
     url="https://github.com/Chinilla",
