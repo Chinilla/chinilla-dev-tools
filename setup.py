@@ -21,7 +21,7 @@ dev_dependencies = [
 
 setup(
     name="chinilla_dev_tools",
-    version="1.0.8",
+    version="1.0.0",
     packages=find_packages(exclude=("tests",)),
     author="Edward Teach",
     entry_points={
