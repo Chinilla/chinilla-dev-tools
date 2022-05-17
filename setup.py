@@ -30,7 +30,7 @@ setup(
     package_data={
         "": ["*.clvm", "*.clvm.hex", "*.clib", "*.clsp", "*.clsp.hex"],
     },
-    author_email="edward@chinilla.net",
+    author_email="edward@chinilla.com",
     setup_requires=["setuptools_scm"],
     install_requires=dependencies,
     url="https://github.com/Chinilla",
