@@ -6,7 +6,7 @@ with open("README.md", "rt") as fh:
     long_description = fh.read()
 
 dependencies = [
-    "chinilla-blockchain",
+    "chinilla-blockchain==1.0.5",
     "packaging==21.0",
     "pytest",
     "pytest-asyncio",
