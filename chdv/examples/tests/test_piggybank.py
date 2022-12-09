@@ -1,24 +1,23 @@
-import pytest
-
 from typing import Dict, List, Optional
 
+import pytest
+import pytest_asyncio
 from chinilla.types.blockchain_format.coin import Coin
-from chinilla.types.spend_bundle import SpendBundle
 from chinilla.types.condition_opcodes import ConditionOpcode
+from chinilla.types.spend_bundle import SpendBundle
 from chinilla.util.ints import uint64
 
 from chdv.examples.drivers.piggybank_drivers import (
     create_piggybank_puzzle,
-    solution_for_piggybank,
     piggybank_announcement_assertion,
+    solution_for_piggybank,
 )
-
 from chdv.test import CoinWrapper
 from chdv.test import setup as setup_test
 
 
 class TestStandardTransaction:
-    @pytest.fixture(scope="function")
+    @pytest_asyncio.fixture(scope="function")
     async def setup(self):
         network, alice, bob = await setup_test()
         await network.farm_block()
@@ -43,7 +42,7 @@ class TestStandardTransaction:
         piggybank_spend: SpendBundle = await alice.spend_coin(
             piggybank_coin,
             pushtx=False,
-            args=solution_for_piggybank(piggybank_coin.as_coin(), CONTRIBUTION_AMOUNT),
+            args=solution_for_piggybank(piggybank_coin.coin, CONTRIBUTION_AMOUNT),
         )
         # This is the spend of a standard coin.  We simply spend to ourselves but minus the CONTRIBUTION_AMOUNT.
         contribution_spend: SpendBundle = await alice.spend_coin(
@@ -56,14 +55,14 @@ class TestStandardTransaction:
                     contribution_coin.puzzle_hash,
                     (contribution_coin.amount - CONTRIBUTION_AMOUNT),
                 ],
-                piggybank_announcement_assertion(piggybank_coin.as_coin(), CONTRIBUTION_AMOUNT),
+                piggybank_announcement_assertion(piggybank_coin.coin, CONTRIBUTION_AMOUNT),
             ],
         )
 
         # Aggregate them to make sure they are spent together
         combined_spend = SpendBundle.aggregate([contribution_spend, piggybank_spend])
 
-        result = await network.push_tx(combined_spend)
+        result: Dict[str, List[Coin]] = await network.push_tx(combined_spend)
         return result
 
     @pytest.mark.asyncio

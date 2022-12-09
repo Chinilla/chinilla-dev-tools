@@ -42,4 +42,4 @@ jobs:
       if: startsWith(github.event.ref, 'refs/tags')
       uses: pypa/gh-action-pypi-publish@master
       with:
-        password: ${{ secrets.PYPI_PASSWORD }}
+        password: ${{ secrets.pypi_password }}

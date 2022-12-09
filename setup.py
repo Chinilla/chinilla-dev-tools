@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 with open("README.md", "rt") as fh:
     long_description = fh.read()
 
 dependencies = [
-    "chinilla-blockchain==1.0.5",
-    "packaging==21.0",
+    "chinilla-blockchain==1.3.1",
+    "packaging",
     "pytest",
     "pytest-asyncio",
     "pytimeparse",
@@ -16,12 +16,21 @@ dependencies = [
 dev_dependencies = [
     "flake8",
     "mypy",
+    "types-aiofiles",
+    "types-click",
+    "types-cryptography",
+    "types-pkg_resources",
+    "types-pyyaml",
+    "types-setuptools",
     "black==21.12b0",
+    "isort",
+    "pre-commit",
+    "pylint",
 ]
 
 setup(
     name="chinilla_dev_tools",
-    version="1.0.1",
+    version="1.1.3",
     packages=find_packages(exclude=("tests",)),
     author="Edward Teach",
     entry_points={
@@ -40,8 +49,8 @@ setup(
     long_description_content_type="text/markdown",
     classifiers=[
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "License :: OSI Approved :: Apache Software License",
         "Topic :: Security :: Cryptography",
     ],

@@ -1,21 +1,19 @@
-import click
-import pytest
 import os
 import shutil
-
-from typing import List
 from pathlib import Path
+from typing import List
+
+import click
+import pytest
+from chinilla.types.blockchain_format.sized_bytes import bytes32
+from chinilla.util.bech32m import decode_puzzle_hash, encode_puzzle_hash
+from chinilla.util.hash import std_hash
 
 from chdv import __version__
-
-from chinilla.util.hash import std_hash
-from chinilla.util.bech32m import encode_puzzle_hash, decode_puzzle_hash
-
-from chdv.cmds import (
-    clsp,
-    chinilla_inspect,
-    rpc,
-)
+from chdv.cmds.chinilla_inspect import inspect_cmd
+from chdv.cmds.clsp import clsp_cmd
+from chdv.cmds.rpc import rpc_cmd
+from chdv.cmds.sim import sim_cmd
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
@@ -103,7 +101,7 @@ def hash_cmd(data: str):
     help="The prefix to encode with",
 )
 def encode_cmd(puzzle_hash: str, prefix: str):
-    print(encode_puzzle_hash(bytes.fromhex(puzzle_hash), prefix))
+    print(encode_puzzle_hash(bytes32.from_hexstr(puzzle_hash), prefix))
 
 
 @cli.command("decode", short_help="Decode a bech32m address to a puzzle hash")
@@ -112,9 +110,10 @@ def decode_cmd(address: str):
     print(decode_puzzle_hash(address).hex())
 
 
-cli.add_command(clsp.clsp_cmd)
-cli.add_command(chinilla_inspect.inspect_cmd)
-cli.add_command(rpc.rpc_cmd)
+cli.add_command(clsp_cmd)
+cli.add_command(inspect_cmd)
+cli.add_command(rpc_cmd)
+cli.add_command(sim_cmd)
 
 
 def main() -> None:

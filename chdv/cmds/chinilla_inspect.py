@@ -1,37 +1,33 @@
-import sys
-import click
 import json
-
-from typing import List, Any, Callable, Dict, Iterable, Union, Optional, Tuple
+import sys
 from pprint import pprint
 from secrets import token_bytes
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
-from blspy import AugSchemeMPL, PrivateKey, G1Element, G2Element
-
-from chinilla.types.blockchain_format.program import INFINITE_COST, Program
-from chinilla.types.blockchain_format.coin import Coin
-from chinilla.types.coin_spend import CoinSpend
-from chinilla.types.coin_record import CoinRecord
-from chinilla.types.spend_bundle import SpendBundle
-from chinilla.types.generator_types import BlockGenerator
+import click
+from chinillablspy import AugSchemeMPL, G1Element, G2Element, PrivateKey
 from chinilla.consensus.cost_calculator import NPCResult
-from chinilla.full_node.mempool_check_conditions import get_name_puzzle_conditions
 from chinilla.full_node.bundle_tools import simple_solution_generator
+from chinilla.full_node.mempool_check_conditions import get_name_puzzle_conditions
+from chinilla.types.blockchain_format.coin import Coin
+from chinilla.types.blockchain_format.program import INFINITE_COST, Program
+from chinilla.types.blockchain_format.sized_bytes import bytes32
+from chinilla.types.coin_record import CoinRecord
+from chinilla.types.coin_spend import CoinSpend
+from chinilla.types.generator_types import BlockGenerator
+from chinilla.types.spend_bundle import SpendBundle
+from chinilla.util.byte_types import hexstr_to_bytes
+from chinilla.util.condition_tools import conditions_dict_for_solution, pkm_pairs_for_conditions_dict
+from chinilla.util.config import load_config
+from chinilla.util.default_root import DEFAULT_ROOT_PATH
+from chinilla.util.ints import uint32, uint64
+from chinilla.util.keychain import bytes_to_mnemonic, mnemonic_to_seed
 from chinilla.wallet.derive_keys import _derive_path
 from chinilla.wallet.puzzles.p2_delegated_puzzle_or_hidden_puzzle import (
     DEFAULT_HIDDEN_PUZZLE_HASH,
-    calculate_synthetic_secret_key,
     calculate_synthetic_public_key,
+    calculate_synthetic_secret_key,
 )
-from chinilla.util.default_root import DEFAULT_ROOT_PATH
-from chinilla.util.config import load_config
-from chinilla.util.keychain import mnemonic_to_seed, bytes_to_mnemonic
-from chinilla.util.ints import uint64, uint32
-from chinilla.util.condition_tools import (
-    conditions_dict_for_solution,
-    pkm_pairs_for_conditions_dict,
-)
-from chinilla.util.byte_types import hexstr_to_bytes
 
 from chdv.cmds.util import parse_program
 
@@ -47,7 +43,7 @@ but also for building them from scratch and for modifying them once you have the
 @click.option("-id", "--id", is_flag=True, help="Output the id of the object")
 @click.option("-t", "--type", is_flag=True, help="Output the type of the object")
 @click.pass_context
-def inspect_cmd(ctx: click.Context, **kwargs):
+def inspect_cmd(ctx: click.Context, **kwargs) -> None:
     ctx.ensure_object(dict)
     for key, value in kwargs.items():
         ctx.obj[key] = value
@@ -85,23 +81,12 @@ def inspect_callback(
 
 # If there's only one key, return the data on that key instead (for things like {'spend_bundle': {...}})
 def json_and_key_strip(input: str) -> Dict:
-    json_dict = json.loads(input)
+    json_dict: Dict = json.loads(input)
     if len(json_dict.keys()) == 1:
-        return json_dict[list(json_dict.keys())[0]]
+        result: Dict = json_dict[list(json_dict.keys())[0]]
+        return result  # mypy
     else:
         return json_dict
-
-
-# Utility function for maintaining compatibility with Chinilla 1.2.11
-def get_npc_result_cost(program: BlockGenerator, npc_result: NPCResult, cost_per_byte: int) -> int:
-    try:
-        # Chinilla > 1.2.11
-        return npc_result.cost
-    except AttributeError:
-        # Chinilla 1.2.11
-        from chinilla.consensus.cost_calculator import calculate_cost_of_program
-
-        return calculate_cost_of_program(program.program, npc_result, cost_per_byte)
 
 
 # Streamable objects can be in either bytes or JSON and we'll take them via CLI or file
@@ -115,15 +100,23 @@ def streamable_load(cls: Any, inputs: Iterable[Any]) -> List[Any]:
     input_objs: List[Any] = []
     for input in inputs:
         if "{" in input:  # If it's a JSON string
-            input_objs.append(cls.from_json_dict(json_and_key_strip(input)))
+            json_dict = json_and_key_strip(input)
+            parsed_obj = cls.from_json_dict(json_dict)
         elif "." in input:  # If it's a filename
             file_string = open(input, "r").read()
             if "{" in file_string:  # If it's a JSON file
-                input_objs.append(cls.from_json_dict(json_and_key_strip(file_string)))
+                json_dict = json_and_key_strip(file_string)
+                parsed_obj = cls.from_json_dict(json_dict)
             else:  # If it's bytes in a file
-                input_objs.append(cls.from_bytes(hexstr_to_bytes(file_string)))
+                original_bytes = hexstr_to_bytes(file_string)
+                parsed_obj = cls.from_bytes(original_bytes)
+                assert bytes(parsed_obj) == original_bytes  # assert the serialization incase it was only a partial read
         else:  # If it's a byte string
-            input_objs.append(cls.from_bytes(hexstr_to_bytes(input)))
+            original_bytes = hexstr_to_bytes(input)
+            parsed_obj = cls.from_bytes(original_bytes)
+            assert bytes(parsed_obj) == original_bytes
+
+        input_objs.append(parsed_obj)
 
     return input_objs
 
@@ -140,32 +133,36 @@ def inspect_any_cmd(ctx: click.Context, objects: Tuple[str]):
         for cls in [Coin, CoinSpend, SpendBundle, CoinRecord]:
             try:
                 in_obj = streamable_load(cls, [obj])[0]
+                break
             except Exception:
                 pass
-        # Try it as some key stuff
-        for cls in [G1Element, G2Element, PrivateKey]:
-            try:
-                in_obj = cls.from_bytes(hexstr_to_bytes(obj))  # type: ignore
-            except Exception:
-                pass
-        # Try it as a Program
-        try:
-            in_obj = parse_program(obj)
-        except Exception:
-            pass
+        else:
+            # Try it as some key stuff
+            for cls in [G1Element, G2Element, PrivateKey]:
+                try:
+                    in_obj = cls.from_bytes(hexstr_to_bytes(obj))  # type: ignore
+                    break
+                except Exception:
+                    pass
+            else:
+                # Try it as a Program
+                try:
+                    in_obj = parse_program(obj)
+                except Exception:
+                    pass
 
         input_objects.append(in_obj)
 
     for obj in input_objects:
         if type(obj) == str:
             print(f"Could not guess the type of {obj}")
-        elif type(obj) == Coin:
+        elif type(obj) == Coin:  # type: ignore[comparison-overlap]
             do_inspect_coin_cmd(ctx, [obj])
-        elif type(obj) == CoinSpend:
+        elif type(obj) == CoinSpend:  # type: ignore[comparison-overlap]
             do_inspect_coin_spend_cmd(ctx, [obj])
-        elif type(obj) == SpendBundle:
+        elif type(obj) == SpendBundle:  # type: ignore[comparison-overlap]
             do_inspect_spend_bundle_cmd(ctx, [obj])
-        elif type(obj) == CoinRecord:
+        elif type(obj) == CoinRecord:  # type: ignore[comparison-overlap]
             do_inspect_coin_record_cmd(ctx, [obj])
         elif type(obj) == Program:
             do_inspect_program_cmd(ctx, [obj])
@@ -204,16 +201,16 @@ def do_inspect_coin_cmd(
     if kwargs and all([kwargs[key] for key in kwargs.keys()]):
         coin_objs: List[Coin] = [
             Coin(
-                hexstr_to_bytes(kwargs["parent_id"]),
-                hexstr_to_bytes(kwargs["puzzle_hash"]),
+                bytes32.from_hexstr(kwargs["parent_id"]),
+                bytes32.from_hexstr(kwargs["puzzle_hash"]),
                 uint64(kwargs["amount"]),
             )
         ]
     elif not kwargs or not any([kwargs[key] for key in kwargs.keys()]):
         try:
             coin_objs = streamable_load(Coin, coins)
-        except Exception:
-            print("One or more of the specified objects was not a coin")
+        except Exception as e:
+            print(f"One or more of the specified objects was not a coin: {e}")
             sys.exit(1)
     else:
         print("Invalid arguments specified.")
@@ -274,8 +271,8 @@ def do_inspect_coin_spend_cmd(
             coin_spend_objs: List[CoinSpend] = [
                 CoinSpend(
                     Coin(
-                        hexstr_to_bytes(kwargs["parent_id"]),
-                        hexstr_to_bytes(kwargs["puzzle_hash"]),
+                        bytes32.from_hexstr(kwargs["parent_id"]),
+                        bytes32.from_hexstr(kwargs["puzzle_hash"]),
                         uint64(kwargs["amount"]),
                     ),
                     parse_program(kwargs["puzzle_reveal"]),
@@ -296,8 +293,8 @@ def do_inspect_coin_spend_cmd(
     elif not kwargs or not any([kwargs[key] for key in kwargs.keys()]):
         try:
             coin_spend_objs = streamable_load(CoinSpend, spends)
-        except Exception:
-            print("One or more of the specified objects was not a coin spend")
+        except Exception as e:
+            print(f"One or more of the specified objects was not a coin spend: {e}")
             sys.exit(1)
     else:
         print("Invalid arguments specified.")
@@ -317,7 +314,7 @@ def do_inspect_coin_spend_cmd(
                 npc_result: NPCResult = get_name_puzzle_conditions(
                     program, INFINITE_COST, cost_per_byte=cost_per_byte, mempool_mode=True
                 )
-                cost: int = get_npc_result_cost(program.program, npc_result, cost_per_byte)
+                cost: int = npc_result.cost
                 print(f"Cost: {cost}")
 
     return coin_spend_objs
@@ -383,8 +380,9 @@ def do_inspect_spend_bundle_cmd(
     else:
         try:
             spend_bundle_objs = streamable_load(SpendBundle, bundles)
-        except Exception:
-            print("One or more of the specified objects was not a spend bundle")
+        except Exception as e:
+            print(f"One or more of the specified objects was not a spend bundle: {e}")
+            sys.exit(1)
 
     if print_results:
         inspect_callback(
@@ -404,7 +402,7 @@ def do_inspect_spend_bundle_cmd(
                         cost_per_byte=kwargs["cost_per_byte"],
                         mempool_mode=True,
                     )
-                    cost: int = get_npc_result_cost(program.program, npc_result, kwargs["cost_per_byte"])
+                    cost: int = npc_result.cost
                     print(f"Cost: {cost}")
             if kwargs["debug"]:
                 print("")
@@ -443,8 +441,8 @@ def do_inspect_spend_bundle_cmd(
                                 else:
                                     pkm_dict[str(pk)] = [msg]
                 # This very deliberately prints identical messages multiple times
-                for pk, msgs in pkm_dict.items():
-                    print(f"{pk}:")
+                for pk_str, msgs in pkm_dict.items():
+                    print(f"{pk_str}:")
                     for msg in msgs:
                         print(f"\t- {msg.hex()}")
 
@@ -506,8 +504,8 @@ def do_inspect_coin_record_cmd(
             coin_record_objs: List[CoinRecord] = [
                 CoinRecord(
                     Coin(
-                        hexstr_to_bytes(kwargs["parent_id"]),
-                        hexstr_to_bytes(kwargs["puzzle_hash"]),
+                        bytes32.from_hexstr(kwargs["parent_id"]),
+                        bytes32.from_hexstr(kwargs["puzzle_hash"]),
                         uint64(kwargs["amount"]),
                     ),
                     kwargs["confirmed_block_index"],
@@ -532,8 +530,9 @@ def do_inspect_coin_record_cmd(
     elif not kwargs or not any([kwargs[key] for key in kwargs.keys()]):
         try:
             coin_record_objs = streamable_load(CoinRecord, records)
-        except Exception:
-            print("One or more of the specified objects was not a coin record")
+        except Exception as e:
+            print(f"One or more of the specified objects was not a coin record: {e}")
+            sys.exit(1)
     else:
         print("Invalid arguments specified.")
         sys.exit(1)
@@ -583,13 +582,6 @@ def do_inspect_program_cmd(
 @click.option("-pk", "--public-key", help="A BLS public key")
 @click.option("-sk", "--secret-key", help="The secret key from which to derive the public key")
 @click.option("-m", "--mnemonic", help="A 24 word mnemonic from which to derive the secret key")
-@click.option(
-    "-pw",
-    "--passphrase",
-    default="",
-    show_default=True,
-    help="A passphrase to use when deriving a secret key from mnemonic",
-)
 @click.option("-r", "--random", is_flag=True, help="Generate a random set of keys")
 @click.option("-hd", "--hd-path", help="Enter the HD path in the form 'm/12381/8444/n/n'")
 @click.option(
@@ -647,11 +639,11 @@ def do_inspect_keys_cmd(ctx: click.Context, print_results: bool = True, **kwargs
                 sk = PrivateKey.from_bytes(hexstr_to_bytes(kwargs["secret_key"]))
                 pk = sk.get_g1()
             elif kwargs["mnemonic"]:
-                seed = mnemonic_to_seed(kwargs["mnemonic"], kwargs["passphrase"])
+                seed = mnemonic_to_seed(kwargs["mnemonic"])
                 sk = AugSchemeMPL.key_gen(seed)
                 pk = sk.get_g1()
             elif kwargs["random"]:
-                sk = AugSchemeMPL.key_gen(mnemonic_to_seed(bytes_to_mnemonic(token_bytes(32)), ""))
+                sk = AugSchemeMPL.key_gen(mnemonic_to_seed(bytes_to_mnemonic(token_bytes(32))))
                 pk = sk.get_g1()
 
             list_path: List[int] = []
@@ -680,8 +672,8 @@ def do_inspect_keys_cmd(ctx: click.Context, print_results: bool = True, **kwargs
 
             if kwargs["synthetic"]:
                 if sk:
-                    sk = calculate_synthetic_secret_key(sk, hexstr_to_bytes(kwargs["hidden_puzhash"]))
-                pk = calculate_synthetic_public_key(pk, hexstr_to_bytes(kwargs["hidden_puzhash"]))
+                    sk = calculate_synthetic_secret_key(sk, bytes32.from_hexstr((kwargs["hidden_puzhash"])))
+                pk = calculate_synthetic_public_key(pk, bytes32.from_hexstr((kwargs["hidden_puzhash"])))
         else:
             print("Invalid arguments specified.")
 

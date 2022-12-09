@@ -1,8 +1,7 @@
-from typing import List, Dict
+from typing import Dict, List
 
+from chinillablspy import AugSchemeMPL, BasicSchemeMPL, G1Element, G2Element, PrivateKey
 from chinilla.util.hash import std_hash
-
-from blspy import BasicSchemeMPL, PrivateKey, G1Element, AugSchemeMPL, G2Element
 
 
 def secret_exponent_for_index(index: int) -> int:
